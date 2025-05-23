@@ -2,16 +2,6 @@
 
 ---
 Our code is based on the code release of [Franzese et al., 2023](https://github.com/giulio98/functional-diffusion-processes). 
-```bib
-@inproceedings{
-  franzese2023continuoustime,
-  title={Continuous-Time Functional Diffusion Processes},
-  author={Giulio Franzese and Giulio Corallo and Simone Rossi and Markus Heinonen and Maurizio Filippone and Pietro Michiardi},
-  booktitle={Thirty-seventh Conference on Neural Information Processing Systems},
-  year={2023},
-  url={https://openreview.net/forum?id=VPrir0p5b6}
-}
-```
 ---
 
 ## Quickstart

@@ -1,0 +1,77 @@
+
+
+
+ # @package _global_
+defaults:
+  - override /trainers: trainer_maml
+  - override /models: mlp_modulation
+  - override /datasets: mnist
+  - override /sdes: heat_subvp
+  - override /samplers: pc_sampler
+  - override /predictors: euler
+  - override /correctors: langevin
+  - override /metrics: metrics_mnist
+
+
+trainers:
+  mode: "eval"
+  model_name: "500001_ecy8p026:v0"
+  training_config:
+    inner_learning_rate: 1e-2
+    inner_steps: 3
+    use_meta_sgd: False
+    ema_rate: 0.9999
+    save_dir: ${oc.env:LOGS_ROOT}/fdp_mnist_reproduce
+  trainer_logging:
+    use_wandb: True
+    wandb_init:
+      name: ${trainers.training_config.save_dir}
+      project: "fdp"
+
+  evaluation_config:
+    seed: 43 # random seed for reproducibility
+    eval_dir: ${oc.env:LOGS_ROOT}/fdp_mnist_reproduce_eval_res_N100 # directory where evaluation results are saved
+    num_samples: 16000 # number of samples to be generated for evaluation
+
+sdes:
+  sde_config:
+    beta_max: 5.0
+    const: 0.02
+    psm_type: "time_independent"
+    probability_flow: False
+    factor: 2.0
+    x_norm: 32
+    energy_norm: 1
+
+correctors:
+  snr: 0.19
+
+samplers:
+  sampler_config:
+    N: 100
+    k: 1
+    denoise: True
+
+models:
+  model_config:
+    uniform_min_val: 0.005
+    uniform_max_val: 0.1
+    use_dense_lr: False
+
+    layer_sizes:
+      - 128
+      - 128
+      - 128
+      - 128
+      - 128
+      - 128
+      - 128
+      - 128
+      - ${datasets.train.data_config.output_size}
+    y_input: False
+datasets:
+  test:
+    data_config:
+      image_height_size: 32
+      image_width_size: 32
+      batch_size: 512

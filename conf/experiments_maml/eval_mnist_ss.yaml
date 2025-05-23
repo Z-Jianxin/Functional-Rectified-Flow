@@ -1,0 +1,92 @@
+# @package _global_
+defaults:
+  - override /trainers: trainer_maml
+  - override /models: mlp_modulation
+  - override /datasets: mnist
+  - override /samplers: ode_sampler
+  - override /losses: ode_mse_loss
+  - override /sdes: ode
+  - override /metrics: metrics_mnist
+
+trainers:
+  mode: "eval"
+  model_name: "local"
+  training_config:
+    inner_learning_rate: 1e-2
+    inner_steps: 3
+    use_meta_sgd: False
+    ema_rate: 0.9999
+    save_dir: ${oc.env:LOGS_ROOT}/MNIST_sampling_final
+  evaluation_config:
+    seed: 43 # random seed for reproducibility
+    eval_dir: ${oc.env:LOGS_ROOT}/MNIST_sampling_final
+    num_samples: 2048 # number of samples to be generated for evaluation
+  trainer_logging:
+    use_wandb: True
+    wandb_init:
+      name: ${trainers.training_config.save_dir}
+      project: "frf_tune_inr_mnist_new"
+
+losses:
+  loss_config:
+    outer_psm: True # [NEW] apply the psm matrx on outer loss
+    frequency_space: True
+    outer_fftshift: False # [NEW] shift the FFT frequency
+    normalize_time: True
+    scheduler_steps: ${trainers.training_config.scheduler_steps}
+    use_scheduler: False #True
+    reduce_mean: False
+    y_input: False
+    use_weights: True # [NEW] Esser et al. 2024, weights on time
+    lognormal_mean: 0.75 # [NEW]
+    lognormal_std: 1.0 # [NEW]
+
+
+sdes:
+  sde_config:
+    psm_choice: "fdp" # [NEW] type of psm matrix to use
+    beta_max: 5.0
+    const: 0.02
+    psm_type: "time_independent"
+    x_norm: 32
+    energy_norm: 1
+    sigma: 0.4 # [NEW] parameter for Matern kernel
+    l: 0.2 # [NEW] parameter for Matern kernel
+    prior_type: "fdp" # [NEW] type of noise prior
+    predict_noise: False # [NEW] predict noise, Esser et al. 2024
+
+
+correctors:
+  snr: 0.16
+
+samplers:
+  sampler_config:
+    eps: 0.001
+    N: 100
+    k: 1
+    denoise: True
+    probability_flow: True
+    factor: 0.6
+    do_super_resolution: False
+    target_shape: [128, 128]
+
+models:
+  model_config:
+    use_dense_lr: False
+    inner_fftshift: False
+    layer_sizes:
+      - 128
+      - 128
+      - 128
+      - 128
+      - 128
+      - 128
+      - 128
+      - 128
+      - ${datasets.train.data_config.output_size}
+    y_input: False
+    inner_frequency_space: True # [NEW] inner loss on frequency space
+datasets:
+  train:
+    data_config:
+      batch_size: 64 #put the largest possible batch size

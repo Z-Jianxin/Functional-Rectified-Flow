@@ -1,0 +1,12 @@
+_target_: functional_diffusion_processes.losses.ode_mse_loss.ODEMSELoss
+loss_config:
+  frequency_space: False
+  normalize_time: True
+  reduce_mean: True
+  use_scheduler: False
+  y_input: False
+  outer_fftshift: False
+  outer_psm: False
+  use_weights: False
+  lognormal_mean: 0.5
+  lognormal_std: 1.0

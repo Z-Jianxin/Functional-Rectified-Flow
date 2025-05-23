@@ -1,0 +1,102 @@
+# @package _global_
+defaults:
+  - override /trainers: trainer_vit
+  - override /models: uvit
+  - override /datasets: celeba
+  - override /samplers: ode_sampler
+  - override /losses: ode_mse_loss
+  - override /sdes: ode
+
+trainers:
+  model_name: "none" #"440001_f95famvk:v0"
+  training_config:
+    total_steps: 350000
+    eval_freq: 10000
+    scheduler_steps: 10000
+    checkpoint_freq: 10000
+    resume_training: False
+    warmup_steps: 5000
+    decay_steps : 10000
+    peak_value: 3.3e-5 #[MODIFIED] from 3.3e-4
+    end_value: 2e-5 #[MODIFIED] from 2e-4
+    save_dir: ${oc.env:LOGS_ROOT}/train_uvit_celeba_frf_prednoise_sobolev_neg
+    ema_rate: 0.9999
+    sampling_only: False
+    weight_decay: 0.01 #[MODIFIED] from 0.03
+  trainer_logging:
+    use_wandb: True
+    wandb_init:
+      name: ${trainers.training_config.save_dir}
+      project: "frf_tune_vit_celeba"
+  optimizer:
+    _target_: "optax.MultiSteps"
+    opt:
+      _target_: "optax.chain"
+      _args_:
+        # - _target_: "optax.clip"
+        #  max_delta: 1.0
+        - _target_: "optax.adamw"
+          learning_rate:
+            _target_: "optax.warmup_cosine_decay_schedule"
+            init_value: 0.0
+            peak_value: ${trainers.training_config.peak_value}
+            warmup_steps: ${trainers.training_config.warmup_steps}
+            decay_steps: ${trainers.training_config.decay_steps}
+            end_value: ${trainers.training_config.end_value}
+          weight_decay: ${trainers.training_config.weight_decay}
+    every_k_schedule: ${trainers.training_config.gradient_accumulation_steps}
+
+losses:
+  loss_config:
+    frequency_space: True
+    normalize_time: False
+    reduce_mean: False
+    scheduler_steps: ${trainers.training_config.scheduler_steps}
+    use_scheduler: False
+    y_input: True
+    use_weights: True # [NEW] Esser et al. 2024, weights on time
+    outer_fftshift: False # [NEW] shift the FFT frequency
+    outer_psm: True # [NEW] apply the psm matrx on outer loss
+    lognormal_mean: 0.5 # [NEW]
+    lognormal_std: 1.0 # [NEW]
+correctors:
+  snr: 0.16
+
+samplers:
+  sampler_config:
+    N: 100
+    k: 1
+    denoise: True
+
+sdes:
+  sde_config:
+    beta_max: 10.0
+    const: 0.02
+    x_norm: 64
+    energy_norm: 64
+    psm_choice: "sobolev" # [NEW] type of psm matrix to use
+    prior_type: "iid" # [NEW] type of noise prior
+    predict_noise: True # True # [NEW] predict noise, Esser et al. 2024
+
+
+datasets:
+  train:
+    data_config:
+      image_height_size: 64
+      image_width_size: 64
+      batch_size: 4 #put the largest possible batch size
+
+models:
+  model_config:
+    patch_size: 1
+    embeddings_size: 512
+    add_position: "encoding"
+    is_unidimensional: False
+    transformer:
+        num_heads: 8
+        num_layers: 7
+        mlp_dim: 2048
+        mlp_ratio: 4
+        dropout_rate: 0.0
+        attention_dropout_rate: 0.0
+        skip: True

@@ -1,0 +1,18 @@
+_target_: functional_diffusion_processes.samplers.ode_sampler.ODESampler
+sampler_config:
+  T: 1.0
+  eps: 1e-3
+  N: 100
+  k: 1
+  denoise: True
+  output_size: ${datasets.train.data_config.output_size}
+  do_super_resolution: False
+  rtol: 3e-3 #[NEW] parameter for adaptive solver
+  atol: 3e-3 #[NEW] parameter for adaptive solver
+  t0: 0 # [NEW] starting time for sampling
+  t1: 0.9999 # [NEW] end time for sampling
+  clip: True # [NEW]
+  clip_lower: -1.0 # [NEW]
+  clip_upper: 1.0 # [NEW]
+  solver: "Dopri5" #[NEW] Euler or Dopri5
+  dt0: 0.01 #[NEW]

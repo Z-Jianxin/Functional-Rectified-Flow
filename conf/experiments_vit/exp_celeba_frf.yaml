@@ -74,8 +74,8 @@ sdes:
     const: 0.02
     x_norm: 64
     energy_norm: 64
-    psm_choice: "sobolev" #"fdp" # [NEW] type of psm matrix to use
-    prior_type: "iid" #"fdp" # [NEW] type of noise prior
+    psm_choice: "fdp" # [NEW] type of psm matrix to use
+    prior_type: "fdp" # [NEW] type of noise prior
     predict_noise: True # True # [NEW] predict noise, Esser et al. 2024
 
 
